@@ -86,6 +86,15 @@ module.exports = function (options) {
           }),
         },
 
+        {
+          test: /\.css$/,
+          include: /node_modules/,
+          use: ExtractTextPlugin.extract({
+            fallback: 'style-loader',
+            use: ['css-loader']
+          }),
+        },
+
         /* ASSETS */
         {
           test: /\.(jpe?g|png)$/,
