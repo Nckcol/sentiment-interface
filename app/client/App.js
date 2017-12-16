@@ -14,7 +14,14 @@ class App extends Component {
   state = {
     dialog: {
       opened: false
-    }
+    },
+    sentence: ''
+  }
+
+  constructor() {
+    super()
+
+    this.getSentence()
   }
 
   handleClickOpen = () => {
@@ -39,9 +46,27 @@ class App extends Component {
     })
   } 
 
+  getSentence = () => {
+    fetch('http://localhost:3080/api/sentence', {
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then((response)=>{
+      return response.json()
+    })
+    .then(res => {
+      this.setState({
+        sentence: res.data
+      })
+    })
+  }
+
   handleAddSource = () => {
     fetch('/api/source', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -71,12 +96,17 @@ class App extends Component {
         </AppBar>
 
         <Paper style={paperStyles} elevation={2}>
-          <Typography type="headline" component="h3">
-            This is a sheet of paper.
+          <br />
+          <br />
+          <Typography type="headline" component="h2">
+            {this.state.sentence}
           </Typography>
-          <Typography type="body1" component="p">
-            Paper can be used to build surface or other elements for your application.
-          </Typography>
+          <br />
+          <br />
+
+          <Button color="primary" onClick={this.getSentence}>Positive</Button>
+          <Button color="primary" onClick={this.getSentence}>Negative</Button>
+          <Button color="accent" onClick={this.getSentence}>Skip</Button>
         </Paper>
 
         
