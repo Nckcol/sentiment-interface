@@ -40,6 +40,15 @@ router.get('/api/sentence', async (ctx) => {
     }
 })
 
+router.post('/api/sentence', async (ctx) => {
+    console.log('call nn python server')
+    /* ctx.body = {
+        status: 'success',
+        message: '',
+        data: sentences[Math.trunc(Math.random() * sentences.length)]
+    } */
+})
+
 router.get('/api/source', async (ctx) => {
     // Add a post
     let data = db.get('sources')

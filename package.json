@@ -8,7 +8,7 @@
     "build": "rimraf public/ && cross-env NODE_ENV=production webpack",
     "start": "cross-env NODE_ENV=development webpack-dev-server",
     "test": "cross-env NODE_ENV=test echo \"All good, the world is still spinning\"",
-    "server": "./app/server/index.js"
+    "server": "node ./app/server/index.js"
   },
   "browserslist": [
     "defaults",
