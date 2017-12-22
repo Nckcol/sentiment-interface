@@ -1,0 +1,19 @@
+.sentence {
+    vertical-align: middle;
+}
+
+.sentence-emotion {
+    vertical-align: middle;
+    margin: 4px;
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 13px;
+    background-color: #f3f3f3;
+    border-radius: 4px;
+    user-select: none;
+    cursor: default;
+}
+
+.textField textarea {
+    min-height: 80px;
+}

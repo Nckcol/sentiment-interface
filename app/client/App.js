@@ -3,6 +3,7 @@ import { AppBar, Toolbar, IconButton, Typography, Paper, Dialog,
   DialogTitle, DialogContent, DialogActions, TextField, DialogContentText,
   Button} from 'material-ui'
 
+import './App.css'
 
 const paperStyles = {
   width: '960px',
@@ -15,7 +16,8 @@ class App extends Component {
     dialog: {
       opened: false
     },
-    sentence: ''
+    sentence: '',
+    textField: ''
   }
 
   constructor() {
@@ -46,6 +48,12 @@ class App extends Component {
     })
   } 
 
+  handleTextChange = (event) => {
+    this.setState({
+      textField: event.target.value
+    })
+  } 
+
   getSentence = () => {
     fetch('http://localhost:3080/api/sentence', {
       credentials: 'same-origin',
@@ -63,6 +71,10 @@ class App extends Component {
     })
   }
 
+  handleClassification = () => {
+    this.classify(this.state.textField)
+  }
+
   handleAddSource = () => {
     fetch('/api/source', {
       method: 'POST',
@@ -75,11 +87,85 @@ class App extends Component {
       })
     })
       .then((response) => {
-        if(response.ok) throw new Error("Request failed")
+        if(!response.ok) throw new Error("Request failed")
       })
       .then(() => {
         this.handleRequestClose()
       })    
+  }
+
+  classify = (text) => {
+    fetch('http://localhost:3080/api/classify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text
+      })
+    })
+      .then((response) => {
+        if(!response.ok) throw new Error("Request failed")
+        return response.json()
+      })
+      .then((response) => {
+        this.setState({
+          classifaction: response.data
+        })
+      })
+  }
+
+  renderClassification() {
+    return (
+      <p>
+        {
+          this.state.classifaction.map( ({ sentence, emotion }, index) => {
+            return (
+              <span key={index} className="sentence">
+                <span className="sentence-emotion">{ emotion }</span>
+                { sentence }
+              </span>
+            )
+          })
+        }
+      </p>
+    )
+  }
+
+  clearClassification = (e) => {
+    e.preventDefault()
+    this.setState({
+      classifaction: null
+    })
+  }
+
+  renderResult() {
+    return (
+      <div>
+        { this.renderClassification() }
+        <br />
+        <Button color="accent" onClick={this.clearClassification}>Back</Button>
+      </div>
+    )
+  }
+
+  renderForm() {
+    return (
+      <div>
+        <TextField
+              label="Paste text here"
+              multiline
+              rowsMax="4"
+              value={this.state.textField}
+              onChange={this.handleTextChange}
+              margin="normal"
+              fullWidth
+              className="textField"
+        />
+        <br />
+        <Button color="primary" onClick={this.handleClassification}>Classify</Button>
+      </div>
+    )
   }
 
   render() {
@@ -91,22 +177,26 @@ class App extends Component {
               Sentiment analysis
             </Typography>
 
-            <Button color="contrast" onClick={this.handleClickOpen}>Add source</Button>
+            {/* <Button color="contrast" onClick={this.handleClickOpen}>Add source</Button> */}
           </Toolbar>
         </AppBar>
 
         <Paper style={paperStyles} elevation={2}>
-          <br />
-          <br />
-          <Typography type="headline" component="h2">
-            {this.state.sentence}
-          </Typography>
-          <br />
+          <Typography type="headline">Classify your text sentences by emotions.</Typography>
           <br />
 
-          <Button color="primary" onClick={this.getSentence}>Positive</Button>
-          <Button color="primary" onClick={this.getSentence}>Negative</Button>
-          <Button color="accent" onClick={this.getSentence}>Skip</Button>
+          {
+            this.state.classifaction
+            ? this.renderResult()
+            : this.renderForm()
+          }
+
+
+          {
+          //<Button color="primary" onClick={this.getSentence}>Positive</Button>
+          // <Button color="primary" onClick={this.getSentence}>Negative</Button>
+          // <Button color="accent" onClick={this.getSentence}>Skip</Button>
+          }
         </Paper>
 
         

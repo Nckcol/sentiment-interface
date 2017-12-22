@@ -2,17 +2,23 @@ const Koa = require('koa');
 const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
 const cors = require('@koa/cors')
+const error = require('koa-json-error')
 
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
 
 const adapter = new FileSync('./db.json')
 const db = low(adapter)
+var fetch = require('node-fetch')
 
 // Set some defaults
 db.defaults({ sources: [], sentences: [] }).write()
 
 const app = new Koa()
+
+
+app.context.db = db
+
 const router = new Router()
 
 router.post('/api/source', async (ctx) => {
@@ -40,6 +46,58 @@ router.get('/api/sentence', async (ctx) => {
     }
 })
 
+router.post('/api/classify', async (ctx) => {
+    if (!ctx.request.body.text) {
+        ctx.throw(400, 'Invalid request.');
+    }
+
+    const text = ctx.request.body.text
+
+    const sentences = text.split('.')
+        .filter(item => /[a-zA-Z]+/i.test(item))
+        .map(
+            item => {
+                while (/^\s/i.test(item)) {
+                   item = item.substr(1)
+                }
+                item += '. '
+                return item
+            }
+        )
+
+    Promise.all(
+        sentences.map(
+            one => {
+                // return fetch('http://localhost:8010', {
+                //     method: 'post',
+                //     data: one
+                // })
+                //     .then(response => {
+                //         console.log(response)
+                //         return {
+                //             sentence: one,
+                //             class: response.data
+                //         }
+                //     })
+                return Promise.resolve(
+                    {
+                        sentence: one,
+                        emotion: 'unknown'
+                    }
+                )
+            }
+        )
+    ).then(
+            data => {
+                ctx.body = {
+                    status: 'success',
+                    message: '',
+                    data: data
+                }
+            }
+        )
+})
+
 router.post('/api/sentence', async (ctx) => {
     console.log('call nn python server')
     /* ctx.body = {
@@ -60,6 +118,7 @@ router.get('/api/source', async (ctx) => {
     }
 })
 
+app.use(error())
 app.use(cors())
 app.use(bodyParser())
 app.use(router.routes())
