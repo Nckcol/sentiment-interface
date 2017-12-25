@@ -9,7 +9,7 @@ const FileSync = require('lowdb/adapters/FileSync')
 
 const adapter = new FileSync('./db.json')
 const db = low(adapter)
-var fetch = require('node-fetch')
+const request = require('request-promise')
 
 // Set some defaults
 db.defaults({ sources: [], sentences: [] }).write()
@@ -46,6 +46,29 @@ router.get('/api/sentence', async (ctx) => {
     }
 })
 
+const getDataFromClassifier = (sentences) => {
+    return Promise.all(
+        sentences.map(
+            one => {
+                return request({
+                    url: 'http://localhost:3011',
+                    method: 'post',
+                    headers: {
+                        'Content-type': 'text/plain'
+                    },
+                    body: one
+                })
+                    .then(response => {
+                        return Promise.resolve({
+                            sentence: one,
+                            emotion: response
+                        })
+                    })
+            }
+        )
+    )
+}
+
 router.post('/api/classify', async (ctx) => {
     if (!ctx.request.body.text) {
         ctx.throw(400, 'Invalid request.');
@@ -65,37 +88,13 @@ router.post('/api/classify', async (ctx) => {
             }
         )
 
-    Promise.all(
-        sentences.map(
-            one => {
-                // return fetch('http://localhost:8010', {
-                //     method: 'post',
-                //     data: one
-                // })
-                //     .then(response => {
-                //         console.log(response)
-                //         return {
-                //             sentence: one,
-                //             class: response.data
-                //         }
-                //     })
-                return Promise.resolve(
-                    {
-                        sentence: one,
-                        emotion: 'unknown'
-                    }
-                )
-            }
-        )
-    ).then(
-            data => {
-                ctx.body = {
-                    status: 'success',
-                    message: '',
-                    data: data
-                }
-            }
-        )
+    const data = await getDataFromClassifier(sentences)
+
+    ctx.body = {
+        status: 'success',
+        message: '',
+        data: data
+    }
 })
 
 router.post('/api/sentence', async (ctx) => {
